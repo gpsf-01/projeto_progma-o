@@ -46,7 +46,7 @@ while True:
             dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
             print(f"Faltam {dias_restantes} dias para a meta ser concluída.")
 
-            tipo = input("\nDigite o tipo de meta (Emagracimento; Ganho de massa muscular; Bater pr; Condicionamento; Habilidade): ")
+            tipo = input("\nDigite o tipo de meta (Emagrecimento; Ganho de massa muscular; Bater pr; Condicionamento; Habilidade): ")
             adicione = input("\nDigite seu pr,peso,habilidade,condicionamento ou massa muscular atual: ")
             Metas.append (input("\nDigite as metas que desja realizar: "))
             adicionar.write(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {adicione}, {Metas}, Duracao da meta {dias_restantes} dias\n")
@@ -86,7 +86,7 @@ while True:
                dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
                print(f"Faltam {dias_restantes} dias para a meta ser concluída.")
 
-               tipo = input("\nDigite o tipo de meta (Emagracimento; Ganho de massa muscular; Bater pr; Condicionamento; Habilidade): ")
+               tipo = input("\nDigite o tipo de meta (Emagrecimento; Ganho de massa muscular; Bater pr; Condicionamento; Habilidade): ")
                adicione = input("\nDigite seu pr,peso,habilidade,condicionamento ou massa muscular atual: ")
                Metas.append (input("\nDigite as metas que deseja realizar: "))
                lista_nova.append(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {adicione}, {Metas}, Duracao da meta {dias_restantes} dias\n")
