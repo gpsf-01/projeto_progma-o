@@ -1,5 +1,9 @@
 import os
 
+if not os.path.exists('perfil.txt'):
+    with open('perfil.txt', 'x') as criar:
+        criar.close()
+
 def limpar_tela():
     os.system("cls" if os.name == "nt" else "clear")
 
@@ -26,20 +30,75 @@ def verificar_perfil_existe(nome, sobrenome):
         pass
     return False
 
+def verificar_acesso(nome, sobrenome):
+    nome_lower = nome.lower()
+    sobrenome_lower = sobrenome.lower()
+    
+    codigo_acesso = input("\nInsira o código de acesso do perfil: ")
+    
+    try:
+        with open('perfil.txt', 'r') as arquivo:
+            for linha in arquivo:
+                if nome_lower in linha.lower() and sobrenome_lower in linha.lower() and codigo_acesso in linha.lower():
+                    return True
+    except FileNotFoundError:
+        pass
+    return False
+
 def criar_perfil(nome = None, sobrenome = None):
     while True:
         try:
-            nome = nome or sem_numeros("\nDigite seu nome: ")
-            sobrenome = sobrenome or sem_numeros("\nDigite seu sobrenome: ")
-            if verificar_perfil_existe(nome, sobrenome):
-                print("\nEsse perfil já existe.")
-                return nome, sobrenome
+            while True:
+                nome = nome or sem_numeros("\nDigite seu nome: ")
+                sobrenome = sobrenome or sem_numeros("\nDigite seu sobrenome: ")
+                if verificar_perfil_existe(nome, sobrenome):
+                    print("\nUm perfil com essas credenciais já existe. Por favor, insira outro nome e/ou sobrenome.")
+                else:
+                    break
+            
             altura = float(input("\nDigite a sua altura (em Cm): "))
             peso = float(input("\nDigite o seu peso (em Kg): "))
             sexo = sem_numeros("\nDigite o seu sexo: ")
+            
+            with open('perfil.txt', 'r') as arquivo:
+                linhas = arquivo.readlines()
+                codigo_acesso_num = len(linhas) + 1
+                codigo_acesso = str(codigo_acesso_num)
 
             with open('perfil.txt', 'a') as arquivo:
-                arquivo.write(f"{nome.strip()},{sobrenome.strip()},{altura},{peso},{sexo}\n")
+                arquivo.write(f"{nome.strip()},{sobrenome.strip()},{altura},{peso},{sexo},{codigo_acesso.strip()}\n")
+            print(f"\nO seu código de acesso é: {codigo_acesso}. Salve ele para poder acessar sua conta novamente no futuro.")
+            print("\nPerfil criado com sucesso!")
+
+            criar_arquivo_registros(nome, sobrenome)
+            criar_arquivo_metas(nome, sobrenome)
+            return nome, sobrenome
+        except ValueError:
+            print("\nValor inválido. Tente novamente.")
+
+def criar_perfil_falha_acesso(nome = None, sobrenome = None):
+    while True:
+        try:
+            while True:
+                nome = sem_numeros("\nDigite seu nome: ")
+                sobrenome = sem_numeros("\nDigite seu sobrenome: ")
+                if verificar_perfil_existe(nome, sobrenome):
+                    print("\nUm perfil com essas credenciais já existe. Por favor, insira outro nome e/ou sobrenome.")
+                else:
+                    break
+            
+            altura = float(input("\nDigite a sua altura (em Cm): "))
+            peso = float(input("\nDigite o seu peso (em Kg): "))
+            sexo = sem_numeros("\nDigite o seu sexo: ")
+            
+            with open('perfil.txt', 'r') as arquivo:
+                linhas = arquivo.readlines()
+                codigo_acesso_num = len(linhas) + 1
+                codigo_acesso = str(codigo_acesso_num)
+
+            with open('perfil.txt', 'a') as arquivo:
+                arquivo.write(f"{nome.strip()},{sobrenome.strip()},{altura},{peso},{sexo},{codigo_acesso.strip()}\n")
+            print(f"\nO seu código de acesso é: {codigo_acesso}. Salve ele para poder acessar sua conta novamente no futuro.")
             print("\nPerfil criado com sucesso!")
 
             criar_arquivo_registros(nome, sobrenome)
@@ -103,16 +162,20 @@ def editar_perfil(nome, sobrenome):
 
                 novo_nome = sem_numeros(f"\nNovo nome (atual: {nome}): ") or nome
                 novo_sobrenome = sem_numeros(f"\nNovo sobrenome (atual: {sobrenome}): ") or sobrenome
-                nova_altura = float(input(f"\nNova altura (cm) (atual: {altura_atual}): ") or altura_atual)
-                novo_peso = float(input(f"\nNovo peso (kg) (atual: {peso_atual}): ") or peso_atual)
+                nova_altura = float(input(f"\nNova altura (Cm) (atual: {altura_atual}): ") or altura_atual)
+                novo_peso = float(input(f"\nNovo peso (Kg) (atual: {peso_atual}): ") or peso_atual)
                 novo_sexo = sem_numeros(f"\nNovo sexo (atual: {sexo_atual}): ") or sexo_atual
 
                 perfis_novo.append(f"{novo_nome},{novo_sobrenome},{nova_altura},{novo_peso},{novo_sexo}\n")
 
                 antigo_arquivo = f"registros_{nome_lower}_{sobrenome_lower}.txt"
                 novo_arquivo = f"registros_{novo_nome.lower()}_{novo_sobrenome.lower()}.txt"
+                metas_antigo = f"metas_{nome_lower}_{sobrenome_lower}.txt"
+                metas_novo = f"metas_{novo_nome.lower()}_{novo_sobrenome.lower()}.txt"
                 if os.path.exists(antigo_arquivo):
                     os.rename(antigo_arquivo, novo_arquivo)
+                if os.path.exists(metas_antigo):
+                    os.rename(metas_antigo, metas_novo)
                 nome, sobrenome = novo_nome, novo_sobrenome
             else:
                 perfis_novo.append(linha)
@@ -130,8 +193,8 @@ def ler_perfil(nome, sobrenome):
     with open('perfil.txt', 'r') as arquivo:
         for linha in arquivo:
             if nome.lower() in linha.lower() and sobrenome.lower() in linha.lower():
-                nome, sobrenome, altura, peso, sexo = linha.strip().split(',')
-                print(f"\nNome: {nome} {sobrenome}\nAltura: {altura} cm\nPeso: {peso} kg\nGênero: {sexo}")
+                nome, sobrenome, altura, peso, sexo, codigo_acesso = linha.strip().split(',')
+                print(f"\nNome: {nome.capitalize()} {sobrenome.capitalize()}\nAltura: {altura} cm\nPeso: {peso} kg\nGênero: {sexo.capitalize()}")
 
 def menu_perfil():
     limpar_tela()
@@ -139,10 +202,23 @@ def menu_perfil():
     sobrenome = input("\nDigite seu sobrenome: ").strip()
 
     if verificar_perfil_existe(nome, sobrenome):
-        ler_perfil(nome, sobrenome)
+        
+        acesso = verificar_acesso(nome, sobrenome)
+        
+        if acesso:
+            ler_perfil(nome, sobrenome)
+        else:
+            print("\nOutro perfil com esse nome já existe. Iniciando a criação de um novo perfil.")
+            criar_perfil_falha_acesso(nome = None, sobrenome = None)
+
+    else:
+        print("\nPerfil não encontrado. Vamos criá-lo.")
+        nome, sobrenome = criar_perfil(nome, sobrenome)
 
         while True:
             try:
+                ler_perfil(nome, sobrenome)
+
                 opcao = int(input("\n1 - Editar perfil\n2 - Excluir perfil\n3 - Continuar para o treino\n\nEscolha: "))
                 if opcao == 1:
                     nome, sobrenome = editar_perfil(nome, sobrenome)
@@ -156,10 +232,7 @@ def menu_perfil():
                     print("\nOpção inválida.")
             except ValueError:
                 print("\nDigite um número válido.")
-    else:
-        print("\nPerfil não encontrado. Vamos criá-lo.")
-        nome, sobrenome = criar_perfil(nome, sobrenome)
-
+    
     return nome, sobrenome
 
 def codigo_principal(nome, sobrenome):
