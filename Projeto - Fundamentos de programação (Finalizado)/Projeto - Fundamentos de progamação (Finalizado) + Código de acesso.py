@@ -48,10 +48,13 @@ def verificar_acesso(nome, sobrenome):
 def criar_perfil(nome = None, sobrenome = None):
     while True:
         try:
-            nome = nome or sem_numeros("\nDigite seu nome: ")
-            sobrenome = sobrenome or sem_numeros("\nDigite seu sobrenome: ")
-            if verificar_perfil_existe(nome, sobrenome):
-                return nome, sobrenome
+            while True:
+                nome = sem_numeros("\nDigite seu nome: ")
+                sobrenome = sem_numeros("\nDigite seu sobrenome: ")
+                if verificar_perfil_existe(nome, sobrenome):
+                    print("\nUm perfil com essas credenciais já existe. Por favor, insira outro nome e/ou sobrenome.")
+                else:
+                    break
             
             altura = float(input("\nDigite a sua altura (em Cm): "))
             peso = float(input("\nDigite o seu peso (em Kg): "))
