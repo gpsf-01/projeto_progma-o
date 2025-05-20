@@ -1,0 +1,668 @@
+import os
+
+if not os.path.exists('perfil.txt'):
+    with open('perfil.txt', 'x') as criar:
+        criar.close()
+
+def limpar_tela():
+    os.system("cls" if os.name == "nt" else "clear")
+
+def sem_numeros(mensagem):
+    while True:
+        entrada = input(mensagem)
+        if all(char.isalpha() or char.isspace() for char in entrada):
+            if entrada.strip():
+                return entrada
+            else:
+                raise ValueError
+        else:
+            raise ValueError
+
+def verificar_perfil_existe(nome, sobrenome):
+    nome_lower = nome.lower()
+    sobrenome_lower = sobrenome.lower()
+    try:
+        with open('perfil.txt', 'r') as arquivo:
+            for linha in arquivo:
+                if nome_lower in linha.lower() and sobrenome_lower in linha.lower():
+                    return True
+    except FileNotFoundError:
+        pass
+    return False
+
+def verificar_acesso(nome, sobrenome):
+    nome_lower = nome.lower()
+    sobrenome_lower = sobrenome.lower()
+    
+    codigo_acesso = input("\nInsira o código de acesso do perfil: ")
+    
+    try:
+        with open('perfil.txt', 'r') as arquivo:
+            for linha in arquivo:
+                if nome_lower in linha.lower() and sobrenome_lower in linha.lower() and codigo_acesso in linha.lower():
+                    return True
+    except FileNotFoundError:
+        pass
+    return False
+
+def criar_perfil(nome = None, sobrenome = None):
+    while True:
+        try:
+            while True:
+                nome = nome or sem_numeros("\nDigite seu nome: ")
+                sobrenome = sobrenome or sem_numeros("\nDigite seu sobrenome: ")
+                if verificar_perfil_existe(nome, sobrenome):
+                    print("\nUm perfil com essas credenciais já existe. Por favor, insira outro nome e/ou sobrenome.")
+                else:
+                    break
+            
+            altura = float(input("\nDigite a sua altura (em Cm): "))
+            peso = float(input("\nDigite o seu peso (em Kg): "))
+            sexo = sem_numeros("\nDigite o seu sexo: ")
+            
+            with open('perfil.txt', 'r') as arquivo:
+                linhas = arquivo.readlines()
+                codigo_acesso_num = len(linhas) + 1
+                codigo_acesso = str(codigo_acesso_num)
+
+            with open('perfil.txt', 'a') as arquivo:
+                arquivo.write(f"{nome.strip()},{sobrenome.strip()},{altura},{peso},{sexo},{codigo_acesso.strip()}\n")
+            print(f"\nO seu código de acesso é: {codigo_acesso}. Salve ele para poder acessar sua conta novamente no futuro.")
+            print("\nPerfil criado com sucesso!")
+
+            criar_arquivo_registros(nome, sobrenome)
+            criar_arquivo_metas(nome, sobrenome)
+            return nome, sobrenome
+        except ValueError:
+            print("\nValor inválido. Tente novamente.")
+
+def criar_perfil_falha_acesso(nome = None, sobrenome = None):
+    while True:
+        try:
+            while True:
+                nome = sem_numeros("\nDigite seu nome: ")
+                sobrenome = sem_numeros("\nDigite seu sobrenome: ")
+                if verificar_perfil_existe(nome, sobrenome):
+                    print("\nUm perfil com essas credenciais já existe. Por favor, insira outro nome e/ou sobrenome.")
+                else:
+                    break
+            
+            altura = float(input("\nDigite a sua altura (em Cm): "))
+            peso = float(input("\nDigite o seu peso (em Kg): "))
+            sexo = sem_numeros("\nDigite o seu sexo: ")
+            
+            with open('perfil.txt', 'r') as arquivo:
+                linhas = arquivo.readlines()
+                codigo_acesso_num = len(linhas) + 1
+                codigo_acesso = str(codigo_acesso_num)
+
+            with open('perfil.txt', 'a') as arquivo:
+                arquivo.write(f"{nome.strip()},{sobrenome.strip()},{altura},{peso},{sexo},{codigo_acesso.strip()}\n")
+            print(f"\nO seu código de acesso é: {codigo_acesso}. Salve ele para poder acessar sua conta novamente no futuro.")
+            print("\nPerfil criado com sucesso!")
+
+            criar_arquivo_registros(nome, sobrenome)
+            criar_arquivo_metas(nome, sobrenome)
+            return nome, sobrenome
+        except ValueError:
+            print("\nValor inválido. Tente novamente.")
+
+def criar_arquivo_registros(nome, sobrenome):
+    nome_arquivo = f"registros_{nome.lower()}_{sobrenome.lower()}.txt"
+    if not os.path.exists(nome_arquivo):
+        with open(nome_arquivo, 'x') as f:
+            pass
+
+def criar_arquivo_metas(nome, sobrenome):
+    nome_arquivo = f"metas_{nome.lower()}_{sobrenome.lower()}.txt"
+    if not os.path.exists(nome_arquivo):
+        with open(nome_arquivo, 'x') as f:
+            pass
+
+def excluir_perfil(nome, sobrenome):
+    nome_lower = nome.strip().lower()
+    sobrenome_lower = sobrenome.strip().lower()
+    perfil_removido = False
+
+    try:
+        with open('perfil.txt', 'r') as arquivo:
+            linhas = arquivo.readlines()
+        with open('perfil.txt', 'w') as arquivo:
+            for linha in linhas:
+                if nome_lower not in linha.lower() or sobrenome_lower not in linha.lower():
+                    arquivo.write(linha)
+                else:
+                    perfil_removido = True
+    except FileNotFoundError:
+        pass
+
+    if perfil_removido:
+        nome_arquivo = f"registros_{nome_lower}_{sobrenome_lower}.txt"
+        if os.path.exists(nome_arquivo):
+            os.remove(nome_arquivo)
+        metas_arquivo = f"metas_{nome_lower}_{sobrenome_lower}.txt"
+        if os.path.exists(metas_arquivo):
+            os.remove(metas_arquivo)
+        print("\nPerfil e registros removidos com sucesso.")
+    else:
+        print("\nPerfil não encontrado.")
+
+def editar_perfil(nome, sobrenome):
+    nome_lower = nome.lower()
+    sobrenome_lower = sobrenome.lower()
+    perfis_novo = []
+    perfil_encontrado = False
+
+    with open('perfil.txt', 'r') as arquivo:
+        for linha in arquivo:
+            if nome_lower in linha.lower() and sobrenome_lower in linha.lower():
+                perfil_encontrado = True
+                dados = linha.strip().split(',')
+                altura_atual, peso_atual, sexo_atual = dados[2], dados[3], dados[4]
+
+                novo_nome = sem_numeros(f"\nNovo nome (atual: {nome}): ") or nome
+                novo_sobrenome = sem_numeros(f"\nNovo sobrenome (atual: {sobrenome}): ") or sobrenome
+                nova_altura = float(input(f"\nNova altura (Cm) (atual: {altura_atual}): ") or altura_atual)
+                novo_peso = float(input(f"\nNovo peso (Kg) (atual: {peso_atual}): ") or peso_atual)
+                novo_sexo = sem_numeros(f"\nNovo sexo (atual: {sexo_atual}): ") or sexo_atual
+
+                perfis_novo.append(f"{novo_nome},{novo_sobrenome},{nova_altura},{novo_peso},{novo_sexo}\n")
+
+                antigo_arquivo = f"registros_{nome_lower}_{sobrenome_lower}.txt"
+                novo_arquivo = f"registros_{novo_nome.lower()}_{novo_sobrenome.lower()}.txt"
+                metas_antigo = f"metas_{nome_lower}_{sobrenome_lower}.txt"
+                metas_novo = f"metas_{novo_nome.lower()}_{novo_sobrenome.lower()}.txt"
+                if os.path.exists(antigo_arquivo):
+                    os.rename(antigo_arquivo, novo_arquivo)
+                if os.path.exists(metas_antigo):
+                    os.rename(metas_antigo, metas_novo)
+                nome, sobrenome = novo_nome, novo_sobrenome
+            else:
+                perfis_novo.append(linha)
+
+    if perfil_encontrado:
+        with open('perfil.txt', 'w') as arquivo:
+            arquivo.writelines(perfis_novo)
+        print("\nPerfil atualizado com sucesso.")
+    else:
+        print("\nPerfil não encontrado.")
+
+    return nome, sobrenome
+
+def ler_perfil(nome, sobrenome):
+    with open('perfil.txt', 'r') as arquivo:
+        for linha in arquivo:
+            if nome.lower() in linha.lower() and sobrenome.lower() in linha.lower():
+                nome, sobrenome, altura, peso, sexo, codigo_acesso = linha.strip().split(',')
+                print(f"\nNome: {nome.capitalize()} {sobrenome.capitalize()}\nAltura: {altura} cm\nPeso: {peso} kg\nGênero: {sexo.capitalize()}")
+
+def menu_perfil():
+    limpar_tela()
+    nome = input("Digite seu nome: ").strip()
+    sobrenome = input("\nDigite seu sobrenome: ").strip()
+
+    if verificar_perfil_existe(nome, sobrenome):
+        
+        acesso = verificar_acesso(nome, sobrenome)
+        
+        if acesso:
+            ler_perfil(nome, sobrenome)
+        else:
+            print("\nOutro perfil com esse nome já existe. Iniciando a criação de um novo perfil.")
+            criar_perfil_falha_acesso(nome = None, sobrenome = None)
+
+    else:
+        print("\nPerfil não encontrado. Vamos criá-lo.")
+        nome, sobrenome = criar_perfil(nome, sobrenome)
+
+        while True:
+            try:
+                ler_perfil(nome, sobrenome)
+
+                opcao = int(input("\n1 - Editar perfil\n2 - Excluir perfil\n3 - Continuar para o treino\n\nEscolha: "))
+                if opcao == 1:
+                    nome, sobrenome = editar_perfil(nome, sobrenome)
+                    break
+                elif opcao == 2:
+                    excluir_perfil(nome, sobrenome)
+                    return None, None
+                elif opcao == 3:
+                    break
+                else:
+                    print("\nOpção inválida.")
+            except ValueError:
+                print("\nDigite um número válido.")
+    
+    return nome, sobrenome
+
+def codigo_principal(nome, sobrenome):
+    nome_arquivo = f"registros_{nome.lower()}_{sobrenome.lower()}.txt"
+    metas_arquivo = f"metas_{nome.lower()}_{sobrenome.lower()}.txt"
+    
+    movimentos = []
+    
+    Metas = []
+    
+    while True:
+        try:
+            ac = int(input("\nSelecione, escrevendo o número indicado, que tipo de ação deseja realizar:\n\n1 - Visualizar registros\n2 - Adicionar registros\n3 - Editar registros\n4 - Excluir registros\n5 - Visualizar por filtros\n6 - Abrir seção de metas\n7 - Encerrar sessão\n\nDigite aqui a ação selecionada: "))
+
+            if ac == 1:
+                with open(nome_arquivo,'r') as visualizar:
+                    conteudo = visualizar.readlines()
+                    print()
+
+                    for i in range(len(conteudo)):
+                        print(f"{i + 1} - {conteudo[i]}")
+
+                escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                if escolha.lower() == "sim":
+                    print()
+                    continue
+                else:
+                    break
+
+            elif ac == 2:
+                with open(nome_arquivo, 'a') as adicionar:
+                    data1 = input("\nDigite o dia da realização do treino: ")
+                    data2 = input("\nDigite o mês da realização do treino: ")
+                    tipo = input("\nDigite o tipo do treino (AMRAP; EMOM; For time): ")
+                    tempo = input("\nDigite o tempo do treino (Em minutos): ")
+                    movimentos.append(input("\nDigite os movimentos realizados: "))
+                    adicionar.write(f"{data1}/{data2}, {tipo}, {tempo} min, {movimentos}\n")
+
+                movimentos.clear()
+
+                print("\nRegistro adicionado com sucesso!")
+
+                escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                if escolha.lower() == "sim":
+                    print()
+                    continue
+                else:
+                    break
+
+            elif ac == 3:
+                print()
+                lista_nova = []
+
+                with open(nome_arquivo, 'r') as editar:
+                    linhas = editar.readlines()
+
+                    for i in range(len(linhas)):
+                        print(f"{i + 1} - {linhas[i]}")
+
+                while True:
+                    try:
+                        linha_remover = int(input("\nDigite o número da linha que deseja editar: "))
+                        if linha_remover <= 0 or linha_remover > len(linhas):
+                            print("\nA linha informada não existe. Por favor, tente novamente.")
+                        else:
+                            data1 = input("\nDigite o dia da realização do treino: ")
+                            data2 = input("\nDigite o mês da realização do treino: ")
+                            tipo = input("\nDigite o tipo do treino (AMRAP; EMOM; For time): ")
+                            tempo = input("\nDigite o tempo do treino (Em minutos): ")
+                            movimentos.append(input("\nDigite os movimentos realizados: "))
+                            lista_nova.append(f"{data1}/{data2}, {tipo}, {tempo} min, {movimentos}\n")
+                            with open(nome_arquivo, 'w') as editar:
+                                lista_editada = linhas[:linha_remover - 1] + lista_nova + linhas[linha_remover:]
+                                editar.write(''.join(lista_editada))
+                                if 0 < linha_remover <= len(linhas):
+                                    print("\nLinha editada com sucesso!")
+                            break
+                    except ValueError:
+                        print("\nA linha informada não existe. Por favor, tente novamente.")
+
+                lista_nova.clear()
+
+                escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                if escolha.lower() == "sim":
+                    print()
+                    continue
+                else:
+                    break
+
+            elif ac == 4:
+
+                while True:
+                    try:
+                        tipo = int(input("\nSelecione, escrevendo o número indicado, o que deseja excluir\n\n1 - Linha única\n2 - Todo o registro\n\nDigite aqui o método de exclusão selecionado: "))
+
+                        if tipo == 1:
+                            print()
+                            with open(nome_arquivo, 'r') as excluir:
+                                linhas = excluir.readlines()
+
+                                for i in range(len(linhas)):
+                                    print(f"{i + 1} - {linhas[i]}")
+
+                                linha_remover = int(input("\nDigite o número da linha que deseja remover: "))
+
+                                if linha_remover <= 0 or linha_remover > len(linhas):
+                                    print("\nA linha informada não existe. Por favor, tente novamente.")
+
+                            with open(nome_arquivo, 'w') as excluir:
+                                lista_nova =  linhas[:linha_remover - 1] + linhas[linha_remover:]
+                                excluir.write(''.join(lista_nova))
+
+                                if 0 < linha_remover <= len(linhas):
+                                    print("\nLinha excluída com sucesso!")
+                                    break
+
+                        elif tipo == 2:
+                            with open(nome_arquivo, 'r') as excluir:
+                                linhas = excluir.readlines()
+
+                            with open(nome_arquivo, 'w') as excluir:
+                                del linhas
+
+                            print("\nRegistro excluído com sucesso!")
+                            break
+                        else:
+                            print("\nO tipo de exclusão escolhido é inválido. Por favor, tente novamente.")
+
+                    except ValueError:
+                        print("\nO tipo de exclusão escolhido é inválido. Por favor, tente novamente.")
+
+
+                escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                if escolha.lower() == "sim":
+                    print()
+                    continue
+                else:
+                    break
+
+            elif ac == 5:
+                print()
+
+                while True:
+                    try:
+                        tipo_filtro = int(input("Como deseja filtrar os treinos?\n\n1 - Por tipo de treino\n2 - Por movimento \n\nSelecione escrevendo os numeros indicados: "))
+
+                        with open(nome_arquivo, 'r') as filtrar:
+                            linhas = filtrar.readlines()
+                            filtrados = []
+
+                            if tipo_filtro == 1:
+                                tipo = input("\nDigite o tipo e treino que deseja buscar (AMRAP; EMOM; For time): ")
+
+                                for linha in linhas:
+                                    linha_procurada = linha.strip().lower()
+                                    tipo_treino = tipo.lower()
+                                    if tipo_treino in linha_procurada:
+                                        filtrados.append(linha)
+
+                                if tipo.lower() == "amrap" and linha in filtrados or tipo.lower() == "emom" and linha in filtrados or tipo.lower() == "for time" and linha in filtrados:
+                                    print("\nResultados encontrados:\n")
+                                    for i in range(len(filtrados)):
+                                        print(f"{i + 1} - {filtrados[i]}")
+                                    break
+
+                                else:
+                                    print("\nTipo não encontrado. Por favor, tente novamente.")
+                                    print()
+
+                            elif tipo_filtro == 2:
+                                movimento = input("\nDigite o movimento que deseja buscar: ")
+
+                                for linha in linhas:
+                                    linha_procurada = linha.strip().lower()
+                                    tipo_treino = movimento.lower()
+                                    if tipo_treino in linha_procurada:
+                                        filtrados.append(linha)
+
+                                if linha in filtrados:
+                                    print("\nResultados encontrados:\n")
+                                    for i in range(len(filtrados)):
+                                        print(f"{i + 1} - {filtrados[i]}")
+                                    break
+
+                                else:
+                                    print("\nMovimento não encontrado. Por favor, tente novamente.")
+                                    print()
+
+                            else:
+                                print("\nA opção escolhida é invalida. Por favor, tente novamente.")
+                                print()
+                    except ValueError:
+                        print("\nA opção escolhida é invalida. Por favor, tente novamente.")
+                        print()
+
+                filtrados.clear
+
+                escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                if escolha.lower() == "sim":
+                    print()
+                    continue
+                else:
+                    break
+
+            elif ac == 6:
+                def calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final):
+                    dias_ano_atual = ano_atual * 365 + mes_atual * 30 + dia_atual
+                    dias_ano_final = ano_final * 365 + mes_final * 30 + dia_final
+                    return dias_ano_final - dias_ano_atual
+
+                while True:
+                    try:
+                        ac_metas = int(input("\nSelecione, escrevendo o número indicado, que tipo de ação deseja realizar:\n\n1 - Visualizar metas\n2 - Adicionar metas\n3 - Editar metas\n4 - Excluir metas\n\nDigite aqui a ação selecionada: "))
+
+                        if ac_metas == 1:
+                            with open(metas_arquivo, 'r') as visualizar:
+                                conteudo = visualizar.readlines()
+                                print()
+
+                                for i in range(len(conteudo)):
+                                    print(f"{i + 1} - {conteudo[i]}")
+
+                                escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                            if escolha.lower() == "sim":
+                                print()
+                                continue
+                            else:
+                                break
+
+                        elif ac_metas == 2:
+                            with open(metas_arquivo, 'a') as adicionar:
+                                dia_atual = int(input("\nDigite o dia do início da meta: "))
+                                mes_atual = int(input("\nDigite o mês do início da meta: "))
+                                ano_atual = int(input("\nDigite o ano atual: "))
+                                dia_final = int(input("\nDigite o dia do fim da meta: "))
+                                mes_final = int(input("\nDigite o mês final: "))
+                                ano_final = int(input("\nDigite o ano final: "))
+
+                                tipo = input("\nDigite o tipo de meta (Emagrecimento; Ganho de massa muscular; Bater PR; Condicionamento; Habilidade): ")
+
+                                if tipo.lower() == "emagrecimento":
+                                    adicione = input("\nDigite peso atual: ")
+
+                                    Metas.append(input("\nDigite a(s) meta(s) que deseja alcançar: "))
+
+                                    dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
+                                    print(f"\nFaltam {dias_restantes} dias para a meta ser concluída.")
+
+                                    adicionar.write(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {adicione}, {Metas}, Duracao da meta {dias_restantes} dias\n")
+
+                                elif tipo.lower() == "condicionamento":
+                                    adicione = input("\nDigite como você vê seu condiconamento(Ótimo, Bom, Médio, Ruim, Péssimo): ")
+
+                                    Metas.append(input("\nDigite a(s) meta(s) que deseja alcançar: "))
+
+                                    dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
+                                    print(f"\nFaltam {dias_restantes} dias para a meta ser concluída.")
+
+                                    adicionar.write(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {adicione}, {Metas}, Duracao da meta {dias_restantes} dias\n")
+
+                                elif tipo.lower() == "bater pr":
+                                    adicione = input("\nDigite seu PR atual: ")
+
+                                    Metas.append(input("\nDigite a(s) meta(s) que deseja alcançar: "))
+
+                                    dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
+                                    print(f"\nFaltam {dias_restantes} dias para a meta ser concluída.")
+
+                                    adicionar.write(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {adicione}, {Metas}, Duracao da meta {dias_restantes} dias\n")
+
+                                elif tipo.lower() == "ganho de massa muscular":
+                                    adicione = input("\nDigite sua massa magra atual: ")
+
+                                    Metas.append(input("\nDigite a(s) meta(s) que deseja alcançar: "))
+
+                                    dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
+                                    print(f"\nFaltam {dias_restantes} dias para a meta ser concluída.")
+
+                                    adicionar.write(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {adicione}, {Metas}, Duracao da meta {dias_restantes} dias\n")
+
+                                elif tipo.lower() == "habilidade":
+                                    Metas.append(input("\nDigite a(s) meta(s) que deseja alcançar: "))
+
+                                    dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
+                                    print(f"\nFaltam {dias_restantes} dias para a meta ser concluída.")
+
+                                    adicionar.write(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {Metas}, Duracao da meta {dias_restantes} dias\n")
+
+                            Metas.clear()
+
+                            print("\nMetas adicionada com sucesso!")
+
+                            escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                            if escolha.lower() == "sim":
+                                print()
+                                continue
+                            else:
+                                break
+
+                        elif ac_metas == 3:
+                            print()
+                            lista_nova = []
+
+                            with open(metas_arquivo, 'r') as editar:
+                                linhas = editar.readlines()
+
+                                for i in range(len(linhas)):
+                                    print(f"{i + 1} - {linhas[i]}")
+
+                                while True:
+                                    try:
+                                        linha_remover = int(input("\nDigite o número da linha que deseja editar: "))
+                                        if linha_remover <= 0 or linha_remover > len(linhas):
+                                            print("\nA linha informada não existe. Por favor, tente novamente.")
+                                        else:
+                                            dia_atual = int(input("\nDigite o dia do início da meta: "))
+                                            mes_atual = int(input("\nDigite o mês do início da meta: "))
+                                            ano_atual = int(input("\nDigite o ano atual: "))
+                                            dia_final = int(input("\nDigite o dia do fim da meta: "))
+                                            mes_final = int(input("\nDigite o mês final: "))
+                                            ano_final = int(input("\nDigite o ano final: "))
+                                            break
+                                    except ValueError:
+                                        print("O valor informado é inválido. Por favor, tente novamente.")
+
+                                    tipo = input("\nDigite o tipo de meta (Emagrecimento; Ganho de massa muscular; Bater PR; Condicionamento; Habilidade): ")
+
+                                    if tipo.lower() == "emagrecimento":
+                                        adicione = input("\nDigite peso atual: ")
+                                    elif tipo.lower() == "ganho de massa muscular":
+                                        adicione = input("\nDigite como você vê seu condiconamento(Ótimo, Bom, Médio, Ruim, Péssimo): ")
+                                    elif tipo.lower() == "bater pr":
+                                        adicione = input("\nDigite seu PR atual: ")
+
+                                    Metas.append(input("\nDigite a(s) meta(s) que deseja alcançar: "))
+
+                                    dias_restantes = calcular_dias(dia_atual, mes_atual, ano_atual, dia_final, mes_final, ano_final)
+                                    print(f"\nFaltam {dias_restantes} dias para a meta ser concluída.")
+                                    lista_nova.append(f"{dia_atual}/{mes_atual}/{ano_atual}, {dia_final}/{mes_final}/{ano_final}, {tipo}, {adicione}, {Metas}, Duracao da meta {dias_restantes} dias\n")
+                                with open(metas_arquivo, 'w') as editar:
+                                    lista_editada = linhas[:linha_remover - 1] + lista_nova + linhas[linha_remover:]
+                                    editar.write(''.join(lista_editada))
+                                    if 0 < linha_remover <= len(linhas):
+                                        print("\nLinha editada com sucesso!")
+
+                            lista_nova.clear()
+
+                            escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+
+                            if escolha.lower() == "sim":
+                                print()
+                                continue
+                            else:
+                                break
+
+                        elif ac_metas == 4:
+                
+                            while True:
+                                try:
+                                    tipo = int(input("\nSelecione, escrevendo o número indicado, o que deseja excluir\n1 - Linha única\n2 - Todo o registro\n\nDigite aqui o método de exclusão selecionado: "))
+        
+                                    if tipo == 1:
+                                        print()
+                                        with open(metas_arquivo, 'r') as excluir:
+                                            linhas = excluir.readlines()
+
+                                            for i in range(len(linhas)):
+                                                print(f"{i + 1} - {linhas[i]}")
+
+                                            linha_remover = int(input("\nDigite o número da linha que deseja remover: "))
+
+                                            if linha_remover <= 0 or linha_remover > len(linhas):
+                                                print("\nA linha informada não existe. Por favor, tente novamente.")
+                                        with open(metas_arquivo, 'w') as excluir:
+                                            lista_nova =  linhas[:linha_remover - 1] + linhas[linha_remover:]
+                                            excluir.write(''.join(lista_nova))
+                                            if 0 < linha_remover <= len(linhas):
+                                                print("\nLinha excluída com sucesso!")
+                                                break
+        
+                                    elif tipo == 2:
+                                        with open(metas_arquivo, 'r') as excluir:
+                                            linhas = excluir.readlines()
+                                        with open(metas_arquivo, 'w') as excluir:
+                                            del linhas
+                                            print("\nRegistro excluído com sucesso!")
+                                            break
+        
+                                    else: 
+                                        print("\nO tipo de exclusão escolhido é inválido. Por favor, tente novamente.")
+                                        print()
+                                except ValueError:
+                                    print("\nA ação escolhida é inválida. Por favor, tente novamente.")
+                                    print()
+        
+                            escolha = input("\nDeseja realizar mais alguma ação?\nResponda com \"Sim\" ou \"Não\": ")
+        
+                            if escolha == "sim" or escolha == "Sim":
+                                print()
+                                continue
+                            else:
+                                break
+
+                        else: 
+                            print("\nA ação escolhida é inválida. Por favor, tente novamente.")
+                            print()
+                    except ValueError:
+                            print("\nA ação escolhida é inválida. Por favor, tente novamente.")
+                            print()
+
+            elif ac == 7:
+                print("\nEncerrando sessão.\nBons treinos!")
+                break
+            
+            else: 
+                print("\nA ação escolhida é inválida. Por favor, tente novamente.")
+                print()
+        except ValueError:
+            print("\nA ação escolhida é inválida. Por favor, tente novamente.")
+            print()
+
+if __name__ == "__main__":
+    limpar_tela()
+    nome, sobrenome = menu_perfil()
+    if nome and sobrenome:
+        codigo_principal(nome, sobrenome)
